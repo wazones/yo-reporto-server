@@ -55,7 +55,7 @@ var main = function() {
         else {
 
             var nearest = tree.nearest({lat: req.query.lat, long: req.query.long},1);
-            res.send(JSON.stringify(nearest[0][0]));
+            res.send(200,nearest[0][0]);
         }
 
     });
