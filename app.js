@@ -41,24 +41,28 @@ var buildTree= function(){
 
 }
 
+var getCoordenates = function(req, res) {
 
+    if(!req.query.lat || !req.query.long) {
+        res.send(400,{'errors':['Parametros insuficientes']});
+    }
+    else {
+        var n = 1;
+        if(req.query.n) {
+            n = req.query.n;
+        }
+        var nearest = tree.nearest({lat: req.query.lat, long: req.query.long},n)
+        .map(function(elem) {
+            return elem[0];
+        });
+        res.send(200,{'nearest':nearest});
+    }
+
+}
 var main = function() {
     var app = express.createServer(express.logger());
-    app.get('/', function(req, res) {
-
-        //    {"errors":[{"message":"Bad Authentication data","code":215}]}
-
-        if(!req.query.lat || !req.query.long) {
-            res.status(400);
-            res.send('Parametros insuficientes');
-        }
-        else {
-
-            var nearest = tree.nearest({lat: req.query.lat, long: req.query.long},1);
-            res.send(200,nearest[0][0]);
-        }
-
-    });
+    app.get('/coordenates', getCoordenates);
+    
 
     var port = process.env.PORT || 8080;
 
