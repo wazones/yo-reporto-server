@@ -4,6 +4,16 @@ var kdt = require('kdt');
 var coords = [];
 var tree;
 
+var util = require('util'),
+    twitter = require('twitter');
+var secrets = JSON.parse(process.env.SECRETS);
+var twit = new twitter({
+    consumer_key: secrets.consumerKey,
+    consumer_secret: secrets.consumerSecret,
+    access_token_key: secrets.accessToken,
+    access_token_secret: secrets.accessTokenSecret
+});
+
 fs.readFile('data/db.csv', 'utf8', function (err,data) {
     if (err) {
         return console.log(err);
@@ -47,22 +57,39 @@ var getCoordenates = function(req, res) {
         res.send(400,{'errors':['Parametros insuficientes']});
     }
     else {
-        var n = 1;
-        if(req.query.n) {
-            n = req.query.n;
+        try {
+            var count = 1;
+            if(req.query.count) {
+                count = req.query.count;
+            }
+            var nearest = tree.nearest({lat: req.query.lat, long: req.query.long},count)
+            .map(function(elem) {
+                return elem[0];
+            });
+            res.send(200,{'nearest':nearest});
+        }catch(err) {
+            res.send(400,{'errors':['Something went wrong']});       
         }
-        var nearest = tree.nearest({lat: req.query.lat, long: req.query.long},n)
-        .map(function(elem) {
-            return elem[0];
-        });
-        res.send(200,{'nearest':nearest});
     }
 
 }
+var getTweets = function(req, res) {
+    twit.get('/statuses/user_timeline.json', 
+    {screen_name:'UNGRD',count:'10',trim_user:'true',exclude_replies:'true'},
+    function(data) {
+        var response = {tweets:
+            data.map(function(elem){
+                return elem.text;
+            })
+        }
+        res.send(200,response);
+    });
+}
 var main = function() {
-    var app = express.createServer(express.logger());
+    var app = express();
     app.get('/coordenates', getCoordenates);
-    
+    app.get('/tweets', getTweets);
+
 
     var port = process.env.PORT || 8080;
 
