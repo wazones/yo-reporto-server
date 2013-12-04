@@ -74,8 +74,12 @@ var getCoordenates = function(req, res) {
 
 }
 var getTweets = function(req, res) {
+    var count = 10;
+    if(req.query.count) {
+        count = req.query.count;
+    }
     twit.get('/statuses/user_timeline.json', 
-    {screen_name:'UNGRD',count:'10',trim_user:'true',exclude_replies:'true'},
+    {screen_name:'UNGRD',count:count,trim_user:'true',exclude_replies:'true'},
     function(data) {
         var response = {tweets:
             data.map(function(elem){
