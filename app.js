@@ -79,11 +79,12 @@ var getTweets = function(req, res) {
         count = req.query.count;
     }
     twit.get('/statuses/user_timeline.json', 
-    {screen_name:'UNGRD',count:count,trim_user:'true',exclude_replies:'true'},
+    {screen_name:'UNGRD',count:count,exclude_replies:'true'},
     function(data) {
         var response = {tweets:
             data.map(function(elem){
-                return elem.text;
+                var t = {text:elem.text,profile_image_url:elem.user.profile_image_url}; 
+                return t;
             })
         }
         res.send(200,response);
