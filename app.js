@@ -14,22 +14,21 @@ var twit = new twitter({
     access_token_secret: secrets.accessTokenSecret
 });
 
-fs.readFile('data/db.csv', 'utf8', function (err,data) {
+fs.readFile('data/db2.csv', 'utf8', function (err,data) {
     if (err) {
         return console.log(err);
     }
     else {
         var lines = data.toString().split('\n');
+        var header = lines[0].split('\t');
+        lines = lines.slice(1);
         lines.forEach(function(line){
-            var t = line.split('\t');
-            if(t.length == 4) {
-                var coord = {};
-                coord.municipio = t[0];
-                coord.lat = parseFloat(t[1]);
-                coord.long = parseFloat(t[2]);
-                coord.depto = t[3];
-                coords.push(coord);
-            }
+            var tokens = line.split('\t');
+            var coord = {};
+            tokens.forEach(function(t,i,tokens){
+                coord[ header[i] ] = t;
+            });
+            coords.push(coord);
         });
         console.log('Size: '+coords.length);
         buildTree();
@@ -40,15 +39,10 @@ fs.readFile('data/db.csv', 'utf8', function (err,data) {
 
 
 var distance = function(a,b) {
-    return Math.pow(a.lat - b.lat, 2) +  Math.pow(a.long - b.long, 2);
+    return Math.pow(a.LATITUD - b.LATITUD, 2) +  Math.pow(a.LONGITUD - b.LONGITUD, 2);
 }
 var buildTree= function(){
-    tree = kdt.createKdTree(coords, distance, ['lat', 'long'])
-
-    var nearest = tree.nearest({ lat: 40, long: 75 }, 1);
-
-    console.log(nearest.reverse());
-
+    tree = kdt.createKdTree(coords, distance, ['LATITUD', 'LONGITUD'])
 }
 
 var getCoordenates = function(req, res) {
@@ -62,7 +56,7 @@ var getCoordenates = function(req, res) {
             if(req.query.count) {
                 count = req.query.count;
             }
-            var nearest = tree.nearest({lat: req.query.lat, long: req.query.long},count)
+            var nearest = tree.nearest({LATITUD: req.query.lat, LONGITUD: req.query.long},count)
             .map(function(elem) {
                 return elem[0];
             });
