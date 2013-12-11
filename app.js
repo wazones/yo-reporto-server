@@ -4,15 +4,21 @@ var kdt = require('kdt');
 var coords = [];
 var tree;
 
-var util = require('util'),
-    twitter = require('twitter');
-var secrets = JSON.parse(process.env.SECRETS);
-var twit = new twitter({
-    consumer_key: secrets.consumerKey,
-    consumer_secret: secrets.consumerSecret,
-    access_token_key: secrets.accessToken,
-    access_token_secret: secrets.accessTokenSecret
-});
+var util = require('util');
+var twitter = require('twitter');
+try {
+    var secrets = JSON.parse(process.env.SECRETS);
+    var twit = new twitter({
+        consumer_key: secrets.consumerKey,
+        consumer_secret: secrets.consumerSecret,
+        access_token_key: secrets.accessToken,
+        access_token_secret: secrets.accessTokenSecret
+    });
+}
+catch(err) {
+    console.log("SECRETS env variable is not set");
+    process.exit(1);
+}
 
 fs.readFile('data/db2.csv', 'utf8', function (err,data) {
     if (err) {
@@ -86,6 +92,13 @@ var getTweets = function(req, res) {
 }
 var main = function() {
     var app = express();
+
+    app.all('/*', function(req, res, next) {
+      res.header("Access-Control-Allow-Origin", "*");
+      res.header("Access-Control-Allow-Headers", "X-Requested-With");
+      next();
+    });
+    
     app.get('/coordenates', getCoordenates);
     app.get('/tweets', getTweets);
 
