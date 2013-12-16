@@ -99,7 +99,7 @@ var main = function() {
       next();
     });
     
-    app.get('/coordenates', getCoordenates);
+    app.get('/coordinates', getCoordenates);
     app.get('/tweets', getTweets);
 
 
