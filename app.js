@@ -45,13 +45,13 @@ fs.readFile('data/db2.csv', 'utf8', function (err,data) {
 
 
 var distance = function(a,b) {
-    return Math.pow(a.LATITUD - b.LATITUD, 2) +  Math.pow(a.LONGITUD - b.LONGITUD, 2);
+    return Math.sqrt(Math.pow(a.LATITUD - b.LATITUD, 2) +  Math.pow(a.LONGITUD - b.LONGITUD, 2));
 }
 var buildTree= function(){
     tree = kdt.createKdTree(coords, distance, ['LATITUD', 'LONGITUD'])
 }
 
-var getCoordenates = function(req, res) {
+var getCoordinates = function(req, res) {
 
     if(!req.query.lat || !req.query.long) {
         res.send(400,{'errors':['Parametros insuficientes']});
@@ -62,10 +62,20 @@ var getCoordenates = function(req, res) {
             if(req.query.count) {
                 count = req.query.count;
             }
-            var nearest = tree.nearest({LATITUD: req.query.lat, LONGITUD: req.query.long},count)
+            var nearest = tree.nearest({LATITUD: parseFloat(req.query.lat), LONGITUD: parseFloat(req.query.long)},count)
             .map(function(elem) {
-                return elem[0];
+                var ret = elem[0];
+                ret.dist = elem[1];
+                return ret;
             });
+            /*.sort(function(a,b){
+                if (a.dist < b.dist)
+                    return -1;
+                if (a.dist > b.dist)
+                    return 1;
+                return 0;
+            });
+*/
             res.send(200,{'nearest':nearest});
         }catch(err) {
             res.send(400,{'errors':['Something went wrong']});       
@@ -99,7 +109,7 @@ var getTweets = function(req, res) {
         res.send(200,response);
     });
 }
-var getTwitterBanner = function(req,res){
+var getTwitterBanner = function(req,res) {
     /*
     users/profile_banner.json
     */
@@ -110,6 +120,46 @@ var getTwitterBanner = function(req,res){
     });
 
 }
+var getCoordinates2 = function(req,res) {
+    var count = 10;
+    if(req.query.count) {
+        count = req.query.count;
+    }
+
+    var coord = {
+        LATITUD:req.query.lat,
+        LONGITUD:req.query.long,
+    };
+    var arr = [];
+    for(x in coords) {
+        arr.push( {
+            id:x,
+            dist:distance(coords[x],coord)
+        });
+    }
+    
+    var ret = arr.sort(function(a,b){
+        if (a.dist < b.dist)
+            return -1;
+        if (a.dist > b.dist)
+            return 1;
+        return 0;
+    })
+    .slice(0,count)
+    .map(function(x){
+        return {
+            "ID_DEPARTAMENTO": coords[x.id]["ID_DEPARTAMENTO"],
+            "NOMBRE_DEPARTAMENTO": coords[x.id]["NOMBRE_DEPARTAMENTO"],
+            "ID_MUNICIPIO": coords[x.id]["ID_MUNICIPIO"],
+            "NOMBRE_MUNICIPIO": coords[x.id]["NOMBRE_MUNICIPIO"],
+            "LONGITUD": coords[x.id]["LONGITUD"],
+            "LATITUD": coords[x.id]["LATITUD"],
+            dist: x.dist
+        };
+    });
+
+    res.send(200,ret);
+}
 var main = function() {
     var app = express();
 
@@ -119,7 +169,8 @@ var main = function() {
       next();
     });
     
-    app.get('/coordinates', getCoordenates);
+    app.get('/coordinates', getCoordinates2);
+    //app.get('/coordinates2', getCoordinates2);
     app.get('/twitter/tweets', getTweets);
     app.get('/twitter/banner', getTwitterBanner);
 
