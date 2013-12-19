@@ -90,6 +90,17 @@ var getTweets = function(req, res) {
         res.send(200,response);
     });
 }
+var getTwitterBanner = function(req,res){
+    /*
+    users/profile_banner.json
+    */
+    twit.get('/users/profile_banner.json', 
+    {screen_name:'UNGRD'},
+    function(data) {
+        res.send(200,data);
+    });
+
+}
 var main = function() {
     var app = express();
 
@@ -100,7 +111,8 @@ var main = function() {
     });
     
     app.get('/coordinates', getCoordenates);
-    app.get('/tweets', getTweets);
+    app.get('/twitter/tweets', getTweets);
+    app.get('/twitter/banner', getTwitterBanner);
 
 
     var port = process.env.PORT || 8080;
