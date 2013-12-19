@@ -158,7 +158,7 @@ var getCoordinates2 = function(req,res) {
         };
     });
 
-    res.send(200,ret);
+    res.send(200,{nearest:ret});
 }
 var main = function() {
     var app = express();
