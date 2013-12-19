@@ -79,11 +79,20 @@ var getTweets = function(req, res) {
         count = req.query.count;
     }
     twit.get('/statuses/user_timeline.json', 
-    {screen_name:'UNGRD',count:count,exclude_replies:'true'},
+    {screen_name:'UNGRD',count:count,exclude_replies:'false'},
     function(data) {
         var response = {tweets:
             data.map(function(elem){
-                var t = {text:elem.text,profile_image_url:elem.user.profile_image_url}; 
+                var t = {
+                    text:elem.text,
+                    profile_image_url:elem.user.profile_image_url,
+                    retweet:false
+                }; 
+                if(elem.text.substr(0,2) == "RT") {
+                    //console.log(elem);
+                    t.retweet = true;
+                    t.retweet_profile_image_url=elem.retweeted_status.user.profile_image_url;
+                }
                 return t;
             })
         }
