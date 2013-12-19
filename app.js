@@ -91,7 +91,7 @@ var getTweets = function(req, res) {
                 if(elem.text.substr(0,2) == "RT") {
                     //console.log(elem);
                     t.retweet = true;
-                    t.retweet_profile_image_url=elem.retweeted_status.user.profile_image_url;
+                    t.profile_image_url=elem.retweeted_status.user.profile_image_url;
                 }
                 return t;
             })
