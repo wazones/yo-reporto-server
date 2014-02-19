@@ -91,22 +91,51 @@ var getTweets = function(req, res) {
     twit.get('/statuses/user_timeline.json', 
     {screen_name:'UNGRD',count:count,exclude_replies:'false'},
     function(data) {
-        var response = {tweets:
-            data.map(function(elem){
-                var t = {
-                    text:elem.text,
-                    profile_image_url:elem.user.profile_image_url,
-                    retweet:false
-                }; 
-                if(elem.text.substr(0,2) == "RT") {
-                    t.text = t.text.substr(t.text.search(":")+2);
-                    t.retweet = true;
-                    t.profile_image_url=elem.retweeted_status.user.profile_image_url;
-                }
-                return t;
-            })
-        }
-        res.send(200,response);
+	var response = {};
+		if(data instanceof Error) {
+			console.log("TWITTER ERROR: "+JSON.stringify(data));
+			res.send(200,response);
+			return;
+		}
+		else {
+			try{
+				response = {tweets:
+					data.map(function(elem){
+						var t = {
+							text:elem.text,
+							profile_image_url:(function(user) {
+								if(user && user.profile_image_url) {
+									return user.profile_image_url;
+								}
+								else {
+									return "";
+								}
+							}(elem.user)),
+							retweet:false
+						}; 
+						if(elem.text && elem.text.substr(0,2) == "RT") {
+							t.text = t.text.substr(t.text.search(":")+2);
+							t.retweet = true;
+							t.profile_image_url=(function(user) {
+								if(user && user.profile_image_url) {
+									return user.profile_image_url;
+								}
+								else {
+									return "";
+								}
+							}(elem.retweeted_status));
+						}
+						return t;
+					})
+				};
+				res.send(200,response);
+				return;
+			}
+			catch(err) {
+				console.log("[app.js] error: "+err);
+			}
+		}
+		res.send(200,response);
     });
 }
 var getTwitterBanner = function(req,res) {
